@@ -38,9 +38,9 @@ print(path)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC use catalog lucasbruand_edp_forecast;
-# MAGIC create schema if not exists pomobility;
-# MAGIC use schema pomobility;
+# MAGIC use catalog lucasbruand_catalog;
+# MAGIC create schema if not exists deployedge;
+# MAGIC use schema deployedge;
 
 # COMMAND ----------
 
