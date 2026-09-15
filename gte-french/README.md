@@ -1,9 +1,11 @@
-# GTE embeddings — French vs. English benchmark
+# GTE / BGE embeddings — French vs. English benchmark
 
-How much embedding quality does the English-tuned GTE model
-(**`databricks-gte-large-en`**, served via the Databricks Foundation Model API) lose on
-**French** relative to **English** — and does the **multilingual** GTE
-(**`Alibaba-NLP/gte-multilingual-base`**, run locally on CPU) close that gap?
+How much embedding quality do English-tuned models lose on **French** vs. **English**, and
+does a **multilingual** model close that gap? Three models, same pairs and metric:
+
+- **`databricks-gte-large-en`** — Databricks FMAPI endpoint (English-tuned GTE)
+- **`databricks-bge-large-en`** — Databricks FMAPI endpoint (English-tuned BGE)
+- **`Alibaba-NLP/gte-multilingual-base`** — downloaded from HuggingFace, run locally on CPU
 
 The benchmark runs the [STS Benchmark](https://huggingface.co/datasets/PhilipMay/stsb_multi_mt)
 in parallel on both languages — the *same* 1,379 sentence pairs with *identical* gold
@@ -15,34 +17,34 @@ identical across languages, any gap is attributable to language alone.
 
 ![STS-B Spearman: English vs. French, by model](assets/sts_by_model.png)
 
-![French STS-B: multilingual vs. English-only](assets/french_model_comparison.png)
+![French STS-B Spearman, by model](assets/french_model_comparison.png)
 
 | Model | EN `cosine_spearman` | FR `cosine_spearman` | FR/EN ratio |
 |-------|---------------------:|---------------------:|------------:|
 | `gte-large-en` (FMAPI) | 0.831 | 0.703 | 0.846 |
-| `gte-multilingual-base` (CPU) | **0.864** | **0.841** | **0.973** |
+| `bge-large-en` (FMAPI) | **0.875** | 0.701 | 0.801 |
+| `gte-multilingual-base` (CPU) | 0.864 | **0.841** | **0.973** |
 
 ### Verdict
 
-The English-only `gte-large-en` score (0.831) matches its published STS-B result, which
-validates the harness. On **French** it drops to 0.703 — usable, but a **~15% relative
-penalty**.
+Both English-tuned FMAPI endpoints land at **~0.70 on French** despite strong English
+scores — `bge-large-en` is actually the best model on English (0.875) but drops the hardest
+on French (FR/EN 0.80). So a higher English score does **not** predict French quality.
 
-**`gte-multilingual-base` largely erases that penalty:** French Spearman **0.841**
-(**+0.138** over the English-only model), an FR/EN ratio of **0.97** vs. 0.85. It's even
-marginally stronger on English (0.864). For French-heavy retrieval/search, the multilingual
-model is the clear choice — at the cost of hosting it yourself (here: downloaded from
-HuggingFace and run on CPU) rather than a managed FMAPI endpoint.
+**`gte-multilingual-base` is the clear choice for French:** French Spearman **0.841**
+(+0.14 over either English-only model), an FR/EN ratio of **0.97**. The trade-off is hosting
+it yourself (here: downloaded from HuggingFace, run on CPU) rather than a managed FMAPI
+endpoint.
 
 ## Running it
 
-`benchmark_gte_french.ipynb` runs on **serverless** compute. It benchmarks two models:
+`benchmark_gte_french.ipynb` runs on **serverless** compute and benchmarks all three models:
 
-- **`gte-large-en`** via the FMAPI endpoint (no local model).
+- **`gte-large-en`** and **`bge-large-en`** via their FMAPI endpoints (no local model).
 - **`gte-multilingual-base`** downloaded from HuggingFace and run locally on CPU via
-  `sentence-transformers`. Notes baked into the notebook: pin `transformers>=4.41,<5` (the
-  model's custom code calls `ModuleUtilsMixin` helpers removed in v5); cache the model in a
-  UC Volume via a symlink-dereferenced copy (HF can't download onto a FUSE Volume); load with
+  `sentence-transformers`. Notes baked into the notebook: pin `transformers>=4.41,<5` (its
+  custom code calls `ModuleUtilsMixin` helpers removed in v5); cache the model in a UC Volume
+  via a symlink-dereferenced copy (HF can't download onto a FUSE Volume); load with
   `low_cpu_mem_usage=False` and rebuild the non-persistent `position_ids`/RoPE buffers.
 
 On first run it downloads STS-B and the model into a UC Volume and caches both; later runs
@@ -61,7 +63,7 @@ skip the downloads.
 
 | Path | What |
 |------|------|
-| [`benchmark_gte_french.ipynb`](benchmark_gte_french.ipynb) | The two-model benchmark notebook |
+| [`benchmark_gte_french.ipynb`](benchmark_gte_french.ipynb) | The three-model benchmark notebook |
 | [`test_multilingual_load.ipynb`](test_multilingual_load.ipynb) | Diagnostic: load the multilingual model on CPU |
 | [`SPEC/SPECS.md`](SPEC/SPECS.md) | Full specification (dataset, metric, method) |
 | [`SPEC/RESULTS.md`](SPEC/RESULTS.md) | Recorded run + verdict |

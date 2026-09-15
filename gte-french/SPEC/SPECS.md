@@ -33,16 +33,17 @@ This spec defines a reproducible benchmark that answers that question.
 
 ## 3. Models under test
 
-Two GTE models, compared on the same pairs and metric:
+Three models, compared on the same pairs and metric:
 
 | Model | Access | Dimension |
 |-------|--------|-----------|
 | **`databricks-gte-large-en`** | Databricks FMAPI serving endpoint (pay-per-token) | 1024 |
+| **`databricks-bge-large-en`** | Databricks FMAPI serving endpoint (pay-per-token) | 1024 |
 | **`Alibaba-NLP/gte-multilingual-base`** | downloaded from HuggingFace, run **locally on CPU** via `sentence-transformers` | 768 |
 
 **FMAPI invocation:** MLflow deployments client —
-`deploy_client.predict(endpoint="databricks-gte-large-en", inputs={"input": [texts...]})`
-→ `data[i].embedding`.
+`deploy_client.predict(endpoint="<endpoint>", inputs={"input": [texts...]})`
+→ `data[i].embedding`, for both the GTE and BGE endpoints.
 
 **Local multilingual model (CPU):** `sentence-transformers`. Getting it to run on serverless
 CPU requires: pin `transformers>=4.41,<5` (its custom code calls `ModuleUtilsMixin` helpers
