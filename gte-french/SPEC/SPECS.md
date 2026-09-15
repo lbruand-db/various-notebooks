@@ -55,21 +55,23 @@ Both: L2-normalize before cosine similarity; batch requests.
 
 ## 4. Dataset — standard choice
 
-**Primary (standard): the STS Benchmark (STS-B), used parallel in EN and FR.**
+**Primary (standard): the STS Benchmark (STS-B), used parallel across EN / FR / IT / ES.**
 
-- **English:** STS-Benchmark test split — the canonical STS task in the
+- **English (reference):** STS-Benchmark test split — the canonical STS task in the
   [MTEB](https://github.com/embeddings-benchmark/mteb) leaderboard.
-- **French:** [`stsb_multi_mt`](https://huggingface.co/datasets/PhilipMay/stsb_multi_mt),
-  `fr` config — the *same* STS-B pairs machine-translated (DeepL) into French. This is the
-  dataset MTEB uses for its French STS task (`STSBenchmarkMultilingualSTS`, part of the
-  **MTEB-French** suite, [Ciancone et al. 2024](https://arxiv.org/abs/2405.20468)).
+- **Other languages:** [`stsb_multi_mt`](https://huggingface.co/datasets/PhilipMay/stsb_multi_mt)
+  `fr` / `it` / `es` configs — the *same* STS-B pairs machine-translated (DeepL). The `fr`
+  config is the dataset MTEB uses for its French STS task (`STSBenchmarkMultilingualSTS`,
+  part of the **MTEB-French** suite, [Ciancone et al. 2024](https://arxiv.org/abs/2405.20468));
+  the same multilingual STS-B provides `it`/`es` (and `de`/`nl`/`pl`/`pt`/`ru`/`zh`).
 
 Why this is the right standard:
 - It is the recognized MTEB STS task, so results are comparable to published numbers.
-- EN and FR are the **same 1,379 test pairs with identical gold similarity scores**
-  (0.0–5.0 scale), so the EN-vs-FR difference is attributable to language alone — a clean
+- Every language is the **same 1,379 test pairs with identical gold similarity scores**
+  (0.0–5.0 scale), so cross-language differences are attributable to language alone — a clean
   apples-to-apples comparison.
 - No labeling or corpus-construction work on our side.
+- Languages are configurable (`LANGS` in the notebook); English is the retention reference.
 
 **Secondary / optional (only if a retrieval signal is wanted later):** `SICKFr` (French
 STS) as a second STS point, or an MTEB-French retrieval task (e.g. `MintakaFr`,

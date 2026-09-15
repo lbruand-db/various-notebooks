@@ -1,38 +1,44 @@
-# Results — GTE / BGE embeddings, French vs. English (STS)
+# Results — GTE / BGE embeddings, English vs. French / Italian / Spanish (STS)
 
 Run of `benchmark_gte_french.ipynb` per [`SPECS.md`](./SPECS.md).
 
 - **Models:** `databricks-gte-large-en` (FMAPI), `databricks-bge-large-en` (FMAPI), and
   `Alibaba-NLP/gte-multilingual-base` (downloaded from HuggingFace, run locally on CPU via
   `sentence-transformers`)
-- **Dataset:** `PhilipMay/stsb_multi_mt`, `test` split, 1,379 pairs per language
+- **Dataset:** `PhilipMay/stsb_multi_mt`, `test` split, 1,379 pairs per language, languages
+  `en` (reference), `fr`, `it`, `es`
 - **Metric:** Spearman correlation of cosine similarity vs. gold score (`cosine_spearman`)
 - **Compute:** serverless (CPU), workspace `e2-demo-field-eng`
 - **Date:** 2026-09-15
 
-## Headline
+## Headline (cosine_spearman)
 
-| Model | EN spearman | EN pearson | FR spearman | FR pearson | FR/EN (spearman) |
-|-------|------------:|-----------:|------------:|-----------:|-----------------:|
-| `gte-large-en` (FMAPI) | 0.8310 | 0.8338 | 0.7033 | 0.7133 | 0.846 |
-| `bge-large-en` (FMAPI) | 0.8751 | 0.8620 | 0.7006 | 0.7120 | 0.801 |
-| `gte-multilingual-base` (CPU) | 0.8641 | 0.8553 | 0.8411 | 0.8389 | 0.973 |
+| Model | EN | FR | IT | ES | retention* |
+|-------|---:|---:|---:|---:|-----------:|
+| `gte-large-en` (FMAPI) | 0.8310 | 0.7033 | 0.6947 | 0.7311 | 0.854 |
+| `bge-large-en` (FMAPI) | 0.8751 | 0.7006 | 0.6944 | 0.7154 | 0.803 |
+| `gte-multilingual-base` (CPU) | 0.8641 | 0.8411 | 0.8228 | 0.8489 | 0.969 |
 
-**Best on French: `gte-multilingual-base` (0.8411).**
+\* retention = mean(FR, IT, ES) ÷ EN.
+
+**Best per language:** EN → `bge-large-en` (0.8751); FR → `gte-multilingual-base` (0.8411);
+IT → `gte-multilingual-base` (0.8228); ES → `gte-multilingual-base` (0.8489).
 
 ## Verdict
 
-Both English-tuned FMAPI endpoints land at ~0.70 on French despite strong English scores.
-`bge-large-en` is the best model on English (0.875) yet drops the hardest on French (FR/EN
-0.80, French 0.701) — a higher English score does not predict French quality.
+Both English-tuned FMAPI endpoints fall to ~0.69–0.73 on French, Italian, and Spanish despite
+strong English scores. `bge-large-en` is the best on English (0.875) yet has the worst
+cross-lingual retention (0.80) — a higher English score does not predict quality in other
+languages.
 
-`gte-multilingual-base` is the clear choice for French: French Spearman 0.841 (+0.14 over
-either English-only model), an FR/EN ratio of 0.97. The trade-off is self-hosting it (CPU
-here) rather than a managed FMAPI endpoint.
+`gte-multilingual-base` wins FR, IT, and ES outright (0.82–0.85) and retains ~97% of its
+English quality across them. It is the clear choice for non-English work, at the cost of
+self-hosting it (CPU here) rather than a managed FMAPI endpoint.
 
 ## Reproduce
 
-Run `benchmark_gte_french.ipynb` on serverless. STS-B is cached to
+Run `benchmark_gte_french.ipynb` on serverless. Languages are set by `LANGS` in the config
+cell. STS-B is cached per language to
 `/Volumes/lucasbruand_catalog/gte_french_bench/data/stsb/`, the multilingual model to
 `/Volumes/.../data/models/gte-multilingual-base/`, and the results table to
 `results_gte_french.csv` in the same Volume. Re-runs read the caches and skip the downloads.
