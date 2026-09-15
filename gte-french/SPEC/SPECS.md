@@ -28,28 +28,29 @@ This spec defines a reproducible benchmark that answers that question.
 
 **Non-goals**
 - Not a general MTEB leaderboard reproduction.
-- Not fine-tuning or adapting the model.
-- Not a comparison against any other embedding model — GTE/FMAPI only.
+- Not fine-tuning or adapting the models.
 - Not a latency/throughput/cost benchmark (tracked separately if needed).
 
-## 3. Model under test
+## 3. Models under test
 
-| | |
-|------|------|
-| Endpoint | **`databricks-gte-large-en`** (Databricks FMAPI, pay-per-token) |
-| Dimension | 1024 |
-| Access | Serving-endpoint query — **no `mlflow.pyfunc.load_model`, no local model** |
+Two GTE models, compared on the same pairs and metric:
 
-**Invocation contract (FMAPI):** query the serving endpoint. Two equivalent paths, pick one
-and use it consistently:
-- **OpenAI-compatible client** pointed at the workspace: `client.embeddings.create(model="databricks-gte-large-en", input=[texts...])` → `resp.data[i].embedding`.
-- **Databricks SDK / MLflow deployments client**: `deploy_client.predict(endpoint="databricks-gte-large-en", inputs={"input": [texts...]})` → `data[i].embedding`.
+| Model | Access | Dimension |
+|-------|--------|-----------|
+| **`databricks-gte-large-en`** | Databricks FMAPI serving endpoint (pay-per-token) | 1024 |
+| **`Alibaba-NLP/gte-multilingual-base`** | downloaded from HuggingFace, run **locally on CPU** via `sentence-transformers` | 768 |
 
-Then:
-- Stack embeddings into an `(n, 1024)` array.
-- L2-normalize before computing cosine similarity.
-- Batch requests (respect the endpoint's per-request input-count and token limits) and add
-  simple retry/backoff for rate limits.
+**FMAPI invocation:** MLflow deployments client —
+`deploy_client.predict(endpoint="databricks-gte-large-en", inputs={"input": [texts...]})`
+→ `data[i].embedding`.
+
+**Local multilingual model (CPU):** `sentence-transformers`. Getting it to run on serverless
+CPU requires: pin `transformers>=4.41,<5` (its custom code calls `ModuleUtilsMixin` helpers
+removed in v5); cache the model in a UC Volume via a symlink-dereferenced copy (HF can't
+download onto a FUSE Volume); load with `low_cpu_mem_usage=False` and rebuild the
+non-persistent `position_ids`/RoPE buffers.
+
+Both: L2-normalize before cosine similarity; batch requests.
 
 ## 4. Dataset — standard choice
 
