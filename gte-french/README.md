@@ -40,6 +40,10 @@ caches it; subsequent runs read the cached parquet and skip the download.
 - **Endpoint:** `databricks-gte-large-en`
 - **Cache + results:** `/Volumes/<catalog>/<schema>/<volume>/` (edit the `CATALOG`/`SCHEMA`
   config cell). Results are written to `results_gte_french.csv` there.
+- **Charts:** the notebook's final cell regenerates the two charts below from `results` and
+  writes them to the same Volume. The images in [`assets/`](assets/) are copied from there,
+  so they stay reproducible from the run (refresh with
+  `databricks fs cp /Volumes/.../sts_en_vs_fr.png assets/ --overwrite`).
 
 ## Files
 
